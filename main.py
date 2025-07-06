@@ -155,7 +155,7 @@ class AirportInfoApp(QMainWindow):
         self.setWindowIcon(QIcon(resource_path(pathlogo2)))
 
         # GPT API配置
-        self.gpt_api_url = "https://api.vveai.com/v1"
+        self.gpt_api_url = "https://api.vveai.com/v1/chat/completions"
         self.gpt_api_key = "API KEY REDACTED (YOUR API KEY HERE)"
 
         screen_geometry = QApplication.desktop().availableGeometry()
@@ -689,13 +689,13 @@ class AirportInfoApp(QMainWindow):
         self.user_input.clear()
 
         # 显示"思考中"消息
-        thinking_html = """
-            <div style='color: #4fc3f7; font-weight: bold;'>AI助手:</div>
-            <div style='margin-bottom: 15px;'>
-                <i>思考中...</i>
-            </div>
-        """
-        self.chat_display.append(thinking_html)
+        #thinking_html = """
+        #    <div style='color: #4fc3f7; font-weight: bold;'>AI助手:</div>
+        #    <div style='margin-bottom: 15px;'>
+        #        <i>思考中...</i>
+        #    </div>
+        #"""
+        #self.chat_display.append(thinking_html)
 
         # 滚动到底部
         self.chat_display.verticalScrollBar().setValue(
