@@ -1,6 +1,8 @@
 # QuanQuan连飞平台 | QuanQuanVFP
 QuanQuan连飞平台应用程序...（共同创作及主要作者：QuanQuan)<br>
 A Virtual Flying Platform app for QuanQuan's SimFlight server... (Co-authored and main credits: QuanQuan)<br><br>
+Major Contributors (Other than Main Author):
+@leodenglovescode | @supermastergui<br><br>
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/leodenglovescode/quanquanvfp?style=for-the-badge&logo=github) ![GitHub Release Date](https://img.shields.io/github/release-date-pre/leodenglovescode/quanquanvfp?style=for-the-badge&logo=github)<br>
 ![GitHub top language](https://img.shields.io/github/languages/top/leodenglovescode/quanquanvfp?style=for-the-badge&logo=github)  ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/leodenglovescode/quanquanvfp/total?style=for-the-badge&logo=github)
