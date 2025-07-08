@@ -162,6 +162,9 @@ class AirportInfoApp(QMainWindow):
         pathlogo2 = os.path.join("assets", "img", "applogo.png")
         print(pathlogo2)
         self.setWindowIcon(QIcon(resource_path(pathlogo2)))
+
+        screen_geometry = QApplication.desktop().availableGeometry()
+        self.resize(int(screen_geometry.width() * 0.8), int(screen_geometry.height() * 0.8))
         
         #跨平台全屏支持
         if sys.platform == "darwin":
@@ -174,8 +177,7 @@ class AirportInfoApp(QMainWindow):
         self.gpt_api_key = ""
         self.gpt_system_prompt = "你是一个专业的飞行模拟助手，语气友好，回答简洁明了.你可以回答关于模拟飞行软件（xplane11, 12, msfs 2020, 2024, pmdg, flightgear 等等等）、模拟航路规划（比如使用NaviGraph, Simbrief, Chartfox等等等）、模拟飞机操作等各种问题."  # <--- Add this line
 
-        screen_geometry = QApplication.desktop().availableGeometry()
-        self.resize(int(screen_geometry.width() * 0.8), int(screen_geometry.height() * 0.8))
+
 
         main_widget = QWidget()
         self.main_layout = QVBoxLayout(main_widget)
