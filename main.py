@@ -163,7 +163,11 @@ class AirportInfoApp(QMainWindow):
         print(pathlogo2)
         self.setWindowIcon(QIcon(resource_path(pathlogo2)))
         
-        self.showFullScreen()
+        #跨平台全屏支持
+        if sys.platform == "darwin":
+            self.showFullScreen()  # macOS native fullscreen
+        else:
+            self.showMaximized()   # Windows/Linux: maximized with window controls
 
         # GPT API配置
         self.gpt_api_url = "https://api.vveai.com/v1/chat/completions"
