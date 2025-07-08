@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                              QComboBox, QScrollArea, QTextEdit)
 from PyQt5.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont, QColor, QIcon, QTextCursor
+import markdown
 
 
 def resource_path(relative_path):
@@ -25,11 +26,13 @@ class GPTWorker(QThread):
     response_received = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
-    def __init__(self, api_key, api_url, prompt):
+    def __init__(self, api_key, api_url, system_prompt, user_prompt):
         super().__init__()
         self.api_key = api_key
         self.api_url = api_url
-        self.prompt = prompt
+        self.system_prompt = system_prompt
+        self.user_prompt = user_prompt
+        self.gpt_system_prompt = "你是一个专业的飞行模拟助手，语气友好，回答简洁明了.你可以回答关于模拟飞行软件（xplane11, 12, msfs 2020, 2024, pmdg, flightgear 等等等）、模拟航路规划（比如使用NaviGraph, Simbrief, Chartfox等等等）、模拟飞机操作等各种问题."
 
     def run(self):
         try:
@@ -38,9 +41,14 @@ class GPTWorker(QThread):
                 "Content-Type": "application/json"
             }
 
+            messages = []
+            if self.system_prompt:
+                messages.append({"role": "system", "content": self.system_prompt})
+            messages.append({"role": "user", "content": self.user_prompt})
+
             payload = {
                 "model": "gpt-4o",
-                "messages": [{"role": "user", "content": self.prompt}],
+                "messages": messages,
                 "temperature": 0.7
             }
 
@@ -56,7 +64,8 @@ class GPTWorker(QThread):
 
         except Exception as e:
             self.error_occurred.emit(f"API请求错误: {str(e)}")
-
+            
+            
 
 class RouteWorker(QThread):
     finished = pyqtSignal(str, str, str)  # airway, file_path, file_name
@@ -153,10 +162,13 @@ class AirportInfoApp(QMainWindow):
         pathlogo2 = os.path.join("assets", "img", "applogo.png")
         print(pathlogo2)
         self.setWindowIcon(QIcon(resource_path(pathlogo2)))
+        
+        self.showFullScreen()
 
         # GPT API配置
         self.gpt_api_url = "https://api.vveai.com/v1/chat/completions"
-        self.gpt_api_key = "API KEY REDACTED (YOUR API KEY HERE)"
+        self.gpt_api_key = ""
+        self.gpt_system_prompt = "你是一个专业的飞行模拟助手，语气友好，回答简洁明了.你可以回答关于模拟飞行软件（xplane11, 12, msfs 2020, 2024, pmdg, flightgear 等等等）、模拟航路规划（比如使用NaviGraph, Simbrief, Chartfox等等等）、模拟飞机操作等各种问题."  # <--- Add this line
 
         screen_geometry = QApplication.desktop().availableGeometry()
         self.resize(int(screen_geometry.width() * 0.8), int(screen_geometry.height() * 0.8))
@@ -354,6 +366,7 @@ class AirportInfoApp(QMainWindow):
                 border-radius: 5px;
                 background-color: rgba(255, 255, 255, 220);
                 border: 1px solid rgba(255, 255, 255, 50);
+                color: black;
             }
             QLineEdit:focus {
                 border: 1px solid #4fc3f7;
@@ -376,7 +389,7 @@ class AirportInfoApp(QMainWindow):
         platform_label.setStyleSheet("font-size: 16px; color: white;")
 
         self.platform_combo = QComboBox()
-        self.platform_combo.addItems(["XPLANE12", "XPLANE11", "XPLANE10", "PMDG"])
+        self.platform_combo.addItems(["XPlane12", "XPlane11", "XPlane10", "PMDG"])
         self.platform_combo.setStyleSheet("""
             QComboBox {
                 padding: 10px;
@@ -385,6 +398,7 @@ class AirportInfoApp(QMainWindow):
                 background-color: rgba(255, 255, 255, 220);
                 border: 1px solid rgba(255, 255, 255, 50);
                 min-width: 150px;
+                color: black;
             }
             QComboBox:hover {
                 background-color: rgba(255, 255, 255, 240);
@@ -432,6 +446,7 @@ class AirportInfoApp(QMainWindow):
                 font-size: 14px;
                 margin-top: 20px;
                 border: 1px solid rgba(0, 0, 0, 20);
+                color: black;
             }
         """)
 
@@ -464,7 +479,7 @@ class AirportInfoApp(QMainWindow):
             font-weight: bold; 
             margin-bottom: 30px;
             border-bottom: 2px solid #4fc3f7;
-            padding-bottom: 10px;
+            padding-bottom: 20px;
         """)
 
         grid_layout = QHBoxLayout()
@@ -483,7 +498,7 @@ class AirportInfoApp(QMainWindow):
             left_column.addSpacing(15)
 
         info_items_right = [
-            ("🌐 注册网页", "39688.cn", "#4fc3f7"),
+            ("🌐 注册网页", "39688.cn (网页暂时开发中……)", "#4fc3f7"),
             ("💬 官方QQ群", "878365469", "#4fc3f7"),
             ("✅ 平台状态", "在线", "#4fc3f7")
         ]
@@ -600,14 +615,17 @@ class AirportInfoApp(QMainWindow):
         """)
         self.chat_display.setOpenExternalLinks(True)
 
+
+
+
+
+
         # 添加欢迎消息
         welcome_msg = """
-            <div style='color: #4fc3f7; font-weight: bold;'>AI助手:</div>
-            <div style='margin-bottom: 15px;'>
-                您好！我是您的飞行AI助手，可以回答关于模拟飞行、航路规划、飞行操作等各种问题。
-                <br>请问有什么可以帮您的吗？
-            </div>
+            <div style='color: #4fc3f7; font-weight: bold;'>AI助手: 您好！我叫小飞，是一个飞行模拟AI助手，我可以回答您关于模拟飞行、航路规划、飞行操作等各种问题，请问有什么可以帮您的吗？</div>
+
         """
+        
         self.chat_display.append(welcome_msg)
 
         # 输入区域
@@ -634,6 +652,7 @@ class AirportInfoApp(QMainWindow):
                 background-color: rgba(255, 255, 255, 220);
                 border: 1px solid rgba(255, 255, 255, 50);
                 min-height: 80px;
+                color: black;
             }
             QTextEdit:focus {
                 border: 1px solid #4fc3f7;
@@ -682,9 +701,12 @@ class AirportInfoApp(QMainWindow):
 
         # 显示用户消息
         user_html = f"""
-            <div style='color: #81c784; font-weight: bold; margin-top: 15px;'>您:</div>
-            <div style='margin-bottom: 15px;'>{user_message}</div>
+            <div style='color: #81c784; font-weight: bold; margin-top: 15px;'>您: {user_message}</div>
+            
         """
+        #<div style='margin-bottom: 15px;'>{user_message}</div>
+        
+        
         self.chat_display.append(user_html)
         self.user_input.clear()
 
@@ -703,24 +725,39 @@ class AirportInfoApp(QMainWindow):
         )
 
         # 创建并启动GPT工作线程
-        self.gpt_worker = GPTWorker(self.gpt_api_key, self.gpt_api_url, user_message)
+        #self.gpt_worker = GPTWorker(self.gpt_api_key, self.gpt_api_url, user_message)
+        #self.gpt_worker.response_received.connect(self.display_gpt_response)
+        #self.gpt_worker.error_occurred.connect(self.display_gpt_error)
+        #self.gpt_worker.start()
+        # ...existing code...
+        self.gpt_worker = GPTWorker(
+            self.gpt_api_key,
+            self.gpt_api_url,
+            self.gpt_system_prompt,  # Use the internal system prompt
+            user_message
+        )
         self.gpt_worker.response_received.connect(self.display_gpt_response)
         self.gpt_worker.error_occurred.connect(self.display_gpt_error)
         self.gpt_worker.start()
 
+
     def display_gpt_response(self, response):
         """显示GPT的回复"""
-        # 移除"思考中"消息
-        cursor = self.chat_display.textCursor()
-        cursor.movePosition(QTextCursor.End)
-        cursor.select(QTextCursor.BlockUnderCursor)
-        cursor.removeSelectedText()
+        # 移除"思考中"消息 （Deprecated Function 功能因不需要已经移除，请在需要“思考中……”消息时再次添加）
+        #cursor = self.chat_display.textCursor()
+        #cursor.movePosition(QTextCursor.End)
+        #cursor.select(QTextCursor.BlockUnderCursor)
+        #cursor.removeSelectedText()
+        # Convert Markdown to HTML
+        html = markdown.markdown(response, extensions=['fenced_code', 'tables'])
+
 
         # 添加实际回复
         response_html = f"""
-            <div style='color: #4fc3f7; font-weight: bold;'>AI助手:</div>
-            <div style='margin-bottom: 15px;'>{response}</div>
+            <div style='color: #4fc3f7; font-weight: bold;'>AI助手: {html}</div>
         """
+        #<div style='margin-bottom: 15px;'>{response}</div>
+        
         self.chat_display.append(response_html)
 
         # 滚动到底部
@@ -893,9 +930,14 @@ class AirportInfoApp(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
+    
+    
     font = QFont("Microsoft YaHei", 10)
     app.setFont(font)
+            
+    
 
     window = AirportInfoApp()
+    
     window.show()
     sys.exit(app.exec_())
